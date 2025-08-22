@@ -1,3 +1,9 @@
+// WebCrypto polyfill for Node.js environments that don't have it
+import { webcrypto } from 'crypto';
+if (!globalThis.crypto) {
+  globalThis.crypto = webcrypto as any;
+}
+
 import express from 'express';
 import path from 'path';
 import {

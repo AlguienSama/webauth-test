@@ -16,6 +16,8 @@
     "@simplewebauthn/browser": "^13.1.2",
     "@simplewebauthn/server": "13.1.2",
     "@types/node": "24.3.0",
+    "crypto": "^1.0.1",
+    "crypto-browserify": "^3.12.1",
     "express": "^5.1.0",
     "typescript": "^5.9.2"
   },
