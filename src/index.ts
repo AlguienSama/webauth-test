@@ -6,6 +6,8 @@ if (!globalThis.crypto) {
 
 import express from 'express';
 import path from 'path';
+import https from 'https';
+import fs from 'fs';
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
@@ -29,11 +31,13 @@ type User = {
 
 const app = express();
 const port = Number(process.env.PORT || 8081);
+const isProduction = process.env.NODE_ENV === 'production';
+const protocol = isProduction || port === 443 ? 'https' : 'http';
+const expectedOrigin = process.env.RP_ORIGIN || `${protocol}://localhost:${port}`;
 
 // Relying party config
 const rpName = process.env.RP_NAME || 'SimpleWebAuthn Demo';
 const rpID = process.env.RP_ID || 'localhost';
-const expectedOrigin = process.env.RP_ORIGIN || `http://localhost:${port}`;
 
 // In-memory user store for demo purposes only
 const usernameToUser = new Map<string, User>();
@@ -209,6 +213,33 @@ app.post('/webauthn/authenticate/verify', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`WebAuthn demo listening on ${expectedOrigin} (rpID: ${rpID})`);
-});
+// Start server with HTTPS if certificates are available
+function startServer() {
+  const certPath = process.env.SSL_CERT || './ssl/cert.pem';
+  const keyPath = process.env.SSL_KEY || './ssl/key.pem';
+  
+  // Check if SSL certificates exist
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    console.log('🔒 Starting HTTPS server...');
+    const options = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+    
+    https.createServer(options, app).listen(port, () => {
+      console.log(`🔐 WebAuthn demo listening on ${expectedOrigin} (rpID: ${rpID})`);
+      console.log('✅ HTTPS enabled - WebAuthn will work on public servers');
+    });
+  } else {
+    console.log('📡 Starting HTTP server...');
+    app.listen(port, () => {
+      console.log(`🔐 WebAuthn demo listening on ${expectedOrigin} (rpID: ${rpID})`);
+      if (rpID !== 'localhost' && protocol === 'http') {
+        console.log('⚠️  WARNING: HTTP detected on non-localhost - WebAuthn may not work!');
+        console.log('💡 For production, please setup HTTPS certificates');
+      }
+    });
+  }
+}
+
+startServer();
