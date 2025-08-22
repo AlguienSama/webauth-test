@@ -189,12 +189,13 @@ app.post('/webauthn/authenticate/verify', async (req, res) => {
       expectedChallenge: user.currentChallenge,
       expectedOrigin,
       expectedRPID: rpID,
-      credential: {
+      authenticator: {
         id: authenticator.id,
         publicKey: authenticator.publicKey,
         counter: authenticator.counter,
         transports: authenticator.transports,
       },
+      requireUserVerification: false,
     });
 
     const { verified, authenticationInfo } = verification;
