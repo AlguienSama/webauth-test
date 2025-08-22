@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebAuthn Mobile</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            margin: 20px; 
+            line-height: 1.6;
+        }
+        .test-item {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test WebAuthn Mobile</h1>
+    
+    <div class="test-item info">
+        <strong>Información del dispositivo:</strong><br>
+        User Agent: <span id="userAgent"></span><br>
+        Plataforma: <span id="platform"></span><br>
+        Táctil: <span id="touch"></span>
+    </div>
+
+         <div class="test-item info">
+         <strong>Capacidades WebAuthn:</strong><br>
+         PublicKeyCredential: <span id="pkc"></span><br>
+         isUserVerifyingPlatformAuthenticatorAvailable: <span id="uvpa"></span><br>
+         isConditionalMediationAvailable: <span id="cma"></span>
+     </div>
+ 
+     <div class="test-item">
+         <strong>Test de autenticador:</strong><br>
+         <button onclick="testPlatformAuthenticator()">Probar autenticador de plataforma</button>
+         <button onclick="testConditionalMediation()">Probar mediación condicional</button>
+         <button onclick="runAllTests()" style="background: #28a745;">🧪 Ejecutar todos los tests</button>
+     </div>
+     
+     <div class="test-item info">
+         <strong>📱 Información móvil:</strong><br>
+         <div id="mobile-info"></div>
+     </div>
+
+    <div id="results"></div>
+
+    <script>
+        // Mostrar información del dispositivo
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('platform').textContent = navigator.platform;
+        document.getElementById('touch').textContent = 'ontouchstart' in window ? 'Sí' : 'No';
+
+                 // Verificar capacidades WebAuthn
+         document.getElementById('pkc').textContent = window.PublicKeyCredential ? 'Sí' : 'No';
+         document.getElementById('uvpa').textContent = window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable ? 'Sí' : 'No';
+         document.getElementById('cma').textContent = window.PublicKeyCredential?.isConditionalMediationAvailable ? 'Sí' : 'No';
+         
+         // Mostrar información móvil
+         const mobileInfo = document.getElementById('mobile-info');
+         const mobileDetails = {
+             userAgent: navigator.userAgent,
+             platform: navigator.platform,
+             touch: 'ontouchstart' in window ? 'Sí' : 'No',
+             maxTouchPoints: navigator.maxTouchPoints || 'No disponible',
+             hardwareConcurrency: navigator.hardwareConcurrency || 'No disponible',
+             deviceMemory: navigator.deviceMemory || 'No disponible',
+             connection: navigator.connection ? navigator.connection.effectiveType : 'No disponible'
+         };
+         
+         mobileInfo.innerHTML = `
+             <div>User Agent: ${mobileDetails.userAgent.substring(0, 80)}...</div>
+             <div>Plataforma: ${mobileDetails.platform}</div>
+             <div>Táctil: ${mobileDetails.touch}</div>
+             <div>Puntos táctiles: ${mobileDetails.maxTouchPoints}</div>
+             <div>Núcleos CPU: ${mobileDetails.hardwareConcurrency}</div>
+             <div>Memoria: ${mobileDetails.deviceMemory} GB</div>
+             <div>Conexión: ${mobileDetails.connection}</div>
+         `;
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-item ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            document.getElementById('results').prepend(div);
+        }
+
+        async function testPlatformAuthenticator() {
+            try {
+                if (!window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+                    addResult('❌ isUserVerifyingPlatformAuthenticatorAvailable no disponible', 'error');
+                    return;
+                }
+
+                addResult('🔄 Probando autenticador de plataforma...', 'info');
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                
+                if (available) {
+                    addResult('✅ Autenticador de plataforma disponible', 'success');
+                } else {
+                    addResult('⚠️ Autenticador de plataforma no disponible', 'warning');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConditionalMediation() {
+            try {
+                if (!window.PublicKeyCredential?.isConditionalMediationAvailable) {
+                    addResult('❌ isConditionalMediationAvailable no disponible', 'error');
+                    return;
+                }
+
+                addResult('🔄 Probando mediación condicional...', 'info');
+                const available = await PublicKeyCredential.isConditionalMediationAvailable();
+                
+                if (available) {
+                    addResult('✅ Mediación condicional disponible', 'success');
+                } else {
+                    addResult('⚠️ Mediación condicional no disponible', 'warning');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+                 // Función para ejecutar todos los tests
+         async function runAllTests() {
+             addResult('🧪 Ejecutando suite completa de tests...', 'info');
+             
+             // Test 1: Basic WebAuthn support
+             addResult('Test 1: Verificando soporte WebAuthn básico...', 'info');
+             if (!window.PublicKeyCredential) {
+                 addResult('❌ Test 1 falló: WebAuthn no soportado', 'error');
+             } else {
+                 addResult('✅ Test 1 pasado: WebAuthn soportado', 'success');
+             }
+             
+             // Test 2: Platform authenticator
+             addResult('Test 2: Verificando autenticador de plataforma...', 'info');
+             if (!window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+                 addResult('❌ Test 2 falló: Autenticador de plataforma no disponible', 'error');
+             } else {
+                 addResult('✅ Test 2 pasado: Autenticador de plataforma disponible', 'success');
+             }
+             
+             // Test 3: Conditional mediation
+             addResult('Test 3: Verificando mediación condicional...', 'info');
+             if (!window.PublicKeyCredential?.isConditionalMediationAvailable) {
+                 addResult('⚠️ Test 3: Mediación condicional no soportada', 'warning');
+             } else {
+                 addResult('✅ Test 3 pasado: Mediación condicional soportada', 'success');
+             }
+             
+             // Test 4: Touch support
+             addResult('Test 4: Verificando soporte táctil...', 'info');
+             if ('ontouchstart' in window) {
+                 addResult('✅ Test 4 pasado: Soporte táctil disponible', 'success');
+             } else {
+                 addResult('⚠️ Test 4: Soporte táctil no disponible', 'warning');
+             }
+             
+             // Test 5: Mobile indicators
+             addResult('Test 5: Verificando indicadores móviles...', 'info');
+             const mobileIndicators = {
+                 maxTouchPoints: navigator.maxTouchPoints > 0,
+                 hardwareConcurrency: navigator.hardwareConcurrency > 0,
+                 deviceMemory: navigator.deviceMemory > 0
+             };
+             
+             if (mobileIndicators.maxTouchPoints || mobileIndicators.hardwareConcurrency || mobileIndicators.deviceMemory) {
+                 addResult('✅ Test 5 pasado: Indicadores móviles detectados', 'success');
+             } else {
+                 addResult('⚠️ Test 5: Pocos indicadores móviles detectados', 'warning');
+             }
+             
+             addResult('🎉 Suite de tests completada!', 'success');
+         }
+         
+         // Auto-test al cargar
+         window.addEventListener('load', () => {
+             addResult('🚀 Página cargada, ejecutando tests automáticos...', 'info');
+             setTimeout(() => {
+                 testPlatformAuthenticator();
+                 testConditionalMediation();
+             }, 1000);
+         });
+    </script>
+</body>
+</html>
