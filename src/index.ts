@@ -28,7 +28,7 @@ type User = {
 };
 
 const app = express();
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 8081);
 
 // Relying party config
 const rpName = process.env.RP_NAME || 'SimpleWebAuthn Demo';
