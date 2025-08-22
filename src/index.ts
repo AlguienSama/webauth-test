@@ -33,11 +33,11 @@ const app = express();
 const port = Number(process.env.PORT || 8081);
 const isProduction = process.env.NODE_ENV === 'production';
 const protocol = isProduction || port === 443 ? 'https' : 'http';
-const expectedOrigin = process.env.RP_ORIGIN || `${protocol}://localhost:${port}`;
+const expectedOrigin = process.env.RP_ORIGIN || `${protocol}://compute-1.amazonaws.com:${port}`;
 
 // Relying party config
 const rpName = process.env.RP_NAME || 'SimpleWebAuthn Demo';
-const rpID = process.env.RP_ID || 'localhost';
+const rpID = process.env.RP_ID || 'compute-1.amazonaws.com';
 
 // In-memory user store for demo purposes only
 const usernameToUser = new Map<string, User>();
